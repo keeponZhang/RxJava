@@ -74,7 +74,7 @@ public final class Schedulers {
         SINGLE = RxJavaPlugins.initSingleScheduler(new SingleTask());
 
         COMPUTATION = RxJavaPlugins.initComputationScheduler(new ComputationTask());
-
+        //各处都能看到勾子函数，此时再来看一下IOTask
         IO = RxJavaPlugins.initIoScheduler(new IOTask());
 
         TRAMPOLINE = TrampolineScheduler.instance();

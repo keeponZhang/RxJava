@@ -130,8 +130,9 @@ public class NewThreadWorker extends Scheduler.Worker implements Disposable {
      */
     @NonNull
     public ScheduledRunnable scheduleActual(final Runnable run, long delayTime, @NonNull TimeUnit unit, @Nullable DisposableContainer parent) {
+        //又是钩子函数，直接是run
         Runnable decoratedRun = RxJavaPlugins.onSchedule(run);
-
+        //然后又对我们的这个Runnbale进行了再次封装
         ScheduledRunnable sr = new ScheduledRunnable(decoratedRun, parent);
 
         if (parent != null) {
@@ -143,6 +144,7 @@ public class NewThreadWorker extends Scheduler.Worker implements Disposable {
         Future<?> f;
         try {
             if (delayTime <= 0) {
+                //终于切 线程了，线程池开始新线程来调用我们的runnable线程
                 f = executor.submit((Callable<Object>)sr);
             } else {
                 f = executor.schedule((Callable<Object>)sr, delayTime, unit);

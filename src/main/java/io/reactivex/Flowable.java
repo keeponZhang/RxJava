@@ -60,6 +60,7 @@ import io.reactivex.subscribers.*;
 public abstract class Flowable<T> implements Publisher<T> {
     /** The default buffer size. */
     static final int BUFFER_SIZE;
+    // 其中关于背压策略提到了缓存池，那它的大小是多少呢
     static {
         BUFFER_SIZE = Math.max(1, Integer.getInteger("rx2.buffer-size", 128));
     }

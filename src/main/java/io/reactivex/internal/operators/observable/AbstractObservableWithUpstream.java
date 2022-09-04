@@ -15,15 +15,16 @@ package io.reactivex.internal.operators.observable;
 
 import io.reactivex.*;
 import io.reactivex.internal.fuseable.HasUpstreamObservableSource;
-
+//具体一个源可消费操作符的基类
 /**
  * Base class for operators with a source consumable.
  *
  * @param <T> the input source type
  * @param <U> the output type
  */
+//看这命名，由于此操作符属于上游
 abstract class AbstractObservableWithUpstream<T, U> extends Observable<U> implements HasUpstreamObservableSource<T> {
-
+                                                      // Observable 妥妥的是被观察者的包装类
     /** The source consumable Observable. */
     protected final ObservableSource<T> source;
 
@@ -32,6 +33,7 @@ abstract class AbstractObservableWithUpstream<T, U> extends Observable<U> implem
      * @param source the consumable Observable
      */
     AbstractObservableWithUpstream(ObservableSource<T> source) {
+        //也就是永远会持有上一个操作符返回的被观察者对象
         this.source = source;
     }
 

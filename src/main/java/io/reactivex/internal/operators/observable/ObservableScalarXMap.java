@@ -173,6 +173,7 @@ public final class ObservableScalarXMap {
      *
      * @param <T> the value type
      */
+    //又继承了Runnable
     public static final class ScalarDisposable<T>
     extends AtomicInteger
     implements QueueDisposable<T>, Runnable {
@@ -187,7 +188,7 @@ public final class ObservableScalarXMap {
         static final int FUSED = 1;
         static final int ON_NEXT = 2;
         static final int ON_COMPLETE = 3;
-
+        //记住：observer：SubscribeOnObserver
         public ScalarDisposable(Observer<? super T> observer, T value) {
             this.observer = observer;
             this.value = value;
@@ -245,6 +246,7 @@ public final class ObservableScalarXMap {
         @Override
         public void run() {
             if (get() == START && compareAndSet(START, ON_NEXT)) {
+                //observer:ObservableSubscribeOn.onNext
                 observer.onNext(value);
                 if (get() == ON_NEXT) {
                     lazySet(ON_COMPLETE);

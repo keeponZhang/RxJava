@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.*;
 /**
  * Scheduler that creates and caches a set of thread pools and reuses them if possible.
  */
+//它是用来创建和缓存一系列的线程池并且根据需要来复用它们的
 public final class IoScheduler extends Scheduler {
     private static final String WORKER_THREAD_NAME_PREFIX = "RxCachedThreadScheduler";
     static final RxThreadFactory WORKER_THREAD_FACTORY;
@@ -218,7 +219,7 @@ public final class IoScheduler extends Scheduler {
         public boolean isDisposed() {
             return once.get();
         }
-
+        //action 它是咱们新创建的Task，如下：
         @NonNull
         @Override
         public Disposable schedule(@NonNull Runnable action, long delayTime, @NonNull TimeUnit unit) {

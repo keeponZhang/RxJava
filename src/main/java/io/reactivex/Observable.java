@@ -95,6 +95,7 @@ import io.reactivex.schedulers.*;
  * @see Flowable
  * @see io.reactivex.observers.DisposableObserver
  */
+// 而Observable又实现了一个接口：ObservableSource
 public abstract class Observable<T> implements ObservableSource<T> {
 
     /**
@@ -2261,7 +2262,9 @@ public abstract class Observable<T> implements ObservableSource<T> {
     @CheckReturnValue
     @SchedulerSupport(SchedulerSupport.NONE)
     public static <T> Observable<T> just(T item) {
+        //对参数做判断处理，没啥好说的
         ObjectHelper.requireNonNull(item, "The item is null");
+        // RxJavaPlugins.onAssembly()一带而过了，其实它是一个hook函数
         return RxJavaPlugins.onAssembly(new ObservableJust<T>(item));
     }
 
@@ -9707,6 +9710,7 @@ public abstract class Observable<T> implements ObservableSource<T> {
     @CheckReturnValue
     @SchedulerSupport(SchedulerSupport.CUSTOM)
     public final Observable<T> observeOn(Scheduler scheduler) {
+        //是否要延时异常
         return observeOn(scheduler, false, bufferSize());
     }
 
@@ -9774,6 +9778,7 @@ public abstract class Observable<T> implements ObservableSource<T> {
     public final Observable<T> observeOn(Scheduler scheduler, boolean delayError, int bufferSize) {
         ObjectHelper.requireNonNull(scheduler, "scheduler is null");
         ObjectHelper.verifyPositive(bufferSize, "bufferSize");
+        //又持有上一个操作符Observable对象
         return RxJavaPlugins.onAssembly(new ObservableObserveOn<T>(this, scheduler, delayError, bufferSize));
     }
 
@@ -12047,7 +12052,8 @@ public abstract class Observable<T> implements ObservableSource<T> {
             observer = RxJavaPlugins.onSubscribe(this, observer);
 
             ObjectHelper.requireNonNull(observer, "Plugin returned null Observer");
-
+            // 此时的Observable是指observeOn()操作符所返回的ObservableObserveOn被观察者包装类，要时刻清楚这个观察者是谁
+            // 最核心的订阅方法
             subscribeActual(observer);
         } catch (NullPointerException e) { // NOPMD
             throw e;
@@ -12125,6 +12131,10 @@ public abstract class Observable<T> implements ObservableSource<T> {
     @SchedulerSupport(SchedulerSupport.CUSTOM)
     public final Observable<T> subscribeOn(Scheduler scheduler) {
         ObjectHelper.requireNonNull(scheduler, "scheduler is null");
+        // 这里有个关系需要注意哈！！就是此时的Observable对象是通过just()调用返回的ObservableJust哈，
+        // 由于所有的操作符都是定义在了父类Observable上了，所以我们在链接每一个操作符的源码时都会链到Observable类而非真实的Observable的子类，
+        // 这个一定得要记住，知道这层关系才有助于我们更好的理解其原理，
+        //很明显此时的this则为调用上一个操作符的那个Observable的自雷
         return RxJavaPlugins.onAssembly(new ObservableSubscribeOn<T>(this, scheduler));
     }
 

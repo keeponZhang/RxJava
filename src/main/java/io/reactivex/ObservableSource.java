@@ -21,6 +21,7 @@ import io.reactivex.annotations.*;
  * @param <T> the element type
  * @since 2.0
  */
+//它是代表了一个基础的，没有背压观察源基础的接口，由观察者来进行消费
 public interface ObservableSource<T> {
 
     /**

@@ -34,7 +34,7 @@ public final class FlowableCreate<T> extends Flowable<T> {
     final FlowableOnSubscribe<T> source;
 
     final BackpressureStrategy backpressure;
-
+    //将其记录下来
     public FlowableCreate(FlowableOnSubscribe<T> source, BackpressureStrategy backpressure) {
         this.source = source;
         this.backpressure = backpressure;
@@ -43,7 +43,7 @@ public final class FlowableCreate<T> extends Flowable<T> {
     @Override
     public void subscribeActual(Subscriber<? super T> t) {
         BaseEmitter<T> emitter;
-
+        //然后我们在订阅时则会根据我们传进去的背压策略进行相应的处理：
         switch (backpressure) {
         case MISSING: {
             emitter = new MissingEmitter<T>(t);
@@ -62,6 +62,7 @@ public final class FlowableCreate<T> extends Flowable<T> {
             break;
         }
         default: {
+            //默认则是Buffer策略
             emitter = new BufferAsyncEmitter<T>(t, bufferSize());
             break;
         }

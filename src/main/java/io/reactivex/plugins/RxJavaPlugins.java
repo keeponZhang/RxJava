@@ -1049,10 +1049,12 @@ public final class RxJavaPlugins {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @NonNull
     public static <T> Observable<T> onAssembly(@NonNull Observable<T> source) {
+        //看到这个函数式接口Function的定义，就知道是想做一些变换操作用的（onObservableAssembly是一个静态变量）
         Function<? super Observable, ? extends Observable> f = onObservableAssembly;
         if (f != null) {
             return apply(f, source);
         }
+        // 其中onObservableAssembly成员变量默认肯定是为null的，所以最终直接将咱们的source给返回
         return source;
     }
 

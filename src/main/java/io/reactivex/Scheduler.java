@@ -195,12 +195,13 @@ public abstract class Scheduler {
      */
     @NonNull
     public Disposable scheduleDirect(@NonNull Runnable run, long delay, @NonNull TimeUnit unit) {
+        //创建一个Worker线程：w:IoScheduler.EventLoopWorker
         final Worker w = createWorker();
-
+        // 钩子函数，若无扩展性特殊处理则返回参数本身：
         final Runnable decoratedRun = RxJavaPlugins.onSchedule(run);
 
         DisposeTask task = new DisposeTask(decoratedRun, w);
-
+        // 此时就会调用Worker的schedule()方法了，将新创建的DisposeTask传进去
         w.schedule(task, delay, unit);
 
         return task;
@@ -555,9 +556,9 @@ public abstract class Scheduler {
             return run;
         }
     }
-
+    //又是Disposable, Runnable这2个接口
     static final class DisposeTask implements Disposable, Runnable, SchedulerRunnableIntrospection {
-
+        //然后又回溯到上一个Task，还记得此Task是哪个么（scheduleDirect.SubscribeTask)
         @NonNull
         final Runnable decoratedRun;
 
@@ -566,7 +567,7 @@ public abstract class Scheduler {
 
         @Nullable
         Thread runner;
-
+        // 声明一个处理任务，将Runnable和Worker封装成DisposeTask：
         DisposeTask(@NonNull Runnable decoratedRun, @NonNull Worker w) {
             this.decoratedRun = decoratedRun;
             this.w = w;
@@ -576,6 +577,7 @@ public abstract class Scheduler {
         public void run() {
             runner = Thread.currentThread();
             try {
+                //此时的线程则为子线程
                 decoratedRun.run();
             } finally {
                 dispose();

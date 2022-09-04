@@ -46,6 +46,7 @@ implements Runnable, Callable<Object>, Disposable {
      * @param parent the parent tracking container or null if none
      */
     public ScheduledRunnable(Runnable actual, DisposableContainer parent) {
+        //此时一定要记住此时Runnable是我们新建的那个Task，主心骨不能忘（Scheduler.DisposeTask）
         super(3);
         this.actual = actual;
         this.lazySet(0, parent);

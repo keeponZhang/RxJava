@@ -14,6 +14,7 @@
 package io.reactivex.internal.operators.observable;
 
 import io.reactivex.*;
+import io.reactivex.android.schedulers.HandlerScheduler;
 import io.reactivex.annotations.Nullable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.Exceptions;
@@ -28,6 +29,8 @@ public final class ObservableObserveOn<T> extends AbstractObservableWithUpstream
     final Scheduler scheduler;
     final boolean delayError;
     final int bufferSize;
+    // 其中这个source很显然是调用了subscribeOn()生成的那个包装被观察者ObservableSubscribeOn。
+    // 好，目前来看一下经过了observeOn()操作符调用之后的被观察者的类层次结构：
     public ObservableObserveOn(ObservableSource<T> source, Scheduler scheduler, boolean delayError, int bufferSize) {
         super(source);
         this.scheduler = scheduler;
@@ -37,15 +40,20 @@ public final class ObservableObserveOn<T> extends AbstractObservableWithUpstream
 
     @Override
     protected void subscribeActual(Observer<? super T> observer) {
+        //很明显此条件不成立
         if (scheduler instanceof TrampolineScheduler) {
             source.subscribe(observer);
         } else {
+            // scheduler：HandlerScheduler
+            // w：HandlerScheduler.HandlerWorker
             Scheduler.Worker w = scheduler.createWorker();
-
+            //第一个参数是我们所关心的观察者回调
+            //又会调用到Observable.subscribeActual方法，此时是ObservableSubscribeOn
             source.subscribe(new ObserveOnObserver<T>(observer, w, delayError, bufferSize));
         }
     }
-
+    //实现了两个接口，一个是观察者接口，另一个是Runnable，给线程用的？
+    // 除了实现了两个接口之外，还继承了一个BasicIntQueueDisposable，看到Disposable关键字了，很眼熟嘛，因为在观察者的回调中就有它
     static final class ObserveOnObserver<T> extends BasicIntQueueDisposable<T>
     implements Observer<T>, Runnable {
 
@@ -67,7 +75,8 @@ public final class ObservableObserveOn<T> extends AbstractObservableWithUpstream
         int sourceMode;
 
         boolean outputFused;
-
+        // actual：subscribe时new出来的观察者
+        // worker：HandlerScheduler.HandlerWorker
         ObserveOnObserver(Observer<? super T> actual, Scheduler.Worker worker, boolean delayError, int bufferSize) {
             this.actual = actual;
             this.worker = worker;
@@ -102,7 +111,7 @@ public final class ObservableObserveOn<T> extends AbstractObservableWithUpstream
                 }
 
                 queue = new SpscLinkedArrayQueue<T>(bufferSize);
-
+                //很明显，这里木有任何切换线程的逻辑处理，那就应该是在当前线程进行回调的（actual是subscribe创建出来的）
                 actual.onSubscribe(this);
             }
         }
@@ -157,6 +166,9 @@ public final class ObservableObserveOn<T> extends AbstractObservableWithUpstream
         }
 
         void schedule() {
+            // 此时的worker还记得是啥不？说实话分析到这也晕晕的了，这里再来回忆一下：
+            // worker：HandlerScheduler.HandlerWorker
+            //注意传的参数是ObserveOnObserver，也实现了Runnable
             if (getAndIncrement() == 0) {
                 worker.schedule(this);
             }
@@ -246,6 +258,7 @@ public final class ObservableObserveOn<T> extends AbstractObservableWithUpstream
 
         @Override
         public void run() {
+            //回调到这个地方，已经切换了线程
             if (outputFused) {
                 drainFused();
             } else {

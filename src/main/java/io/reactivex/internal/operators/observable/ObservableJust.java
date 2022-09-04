@@ -21,6 +21,7 @@ import io.reactivex.internal.operators.observable.ObservableScalarXMap.ScalarDis
  * Represents a constant scalar value.
  * @param <T> the value type
  */
+//等于是对被观察者的一个再包装
 public final class ObservableJust<T> extends Observable<T> implements ScalarCallable<T> {
 
     private final T value;
@@ -30,8 +31,11 @@ public final class ObservableJust<T> extends Observable<T> implements ScalarCall
 
     @Override
     protected void subscribeActual(Observer<? super T> s) {
+        //则会调用它了，s：SubscribeOnObserver
+        //这里注意，把value也传进去了
         ScalarDisposable<T> sd = new ScalarDisposable<T>(s, value);
         s.onSubscribe(sd);
+        //这里就调用run方法了
         sd.run();
     }
 
